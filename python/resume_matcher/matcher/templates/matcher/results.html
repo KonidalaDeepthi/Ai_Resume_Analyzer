@@ -1,0 +1,113 @@
+{% extends 'matcher/base.html' %}
+
+{% block title %}Results - AI Resume Skill Matcher{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">Analysis Results for {{ name }}</h2>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Resume Strength Score</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-2">
+                    <div class="progress-bar" role="progressbar" style="width: {{ resume_strength }}%">{{ resume_strength|floatformat:1 }}%</div>
+                </div>
+                <p>Your resume contains {{ resume_strength|floatformat:1 }}% of the key skills we're looking for.</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Extracted Skills</h5>
+            </div>
+            <div class="card-body">
+                {% for category, skills in extracted_skills.items %}
+                <h6>{{ category }} Skills:</h6>
+                <ul>
+                    {% for skill in skills %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+                {% endfor %}
+                {% if not extracted_skills %}
+                <p>No skills detected. Try uploading a different resume or check the format.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Job Match Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for match in matches %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card {% if match.role == recommended.role %}border-primary{% endif %}">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ match.role }}</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ match.percentage }}%">{{ match.percentage|floatformat:1 }}%</div>
+                                </div>
+                                <p><strong>Matched:</strong> {{ match.matched|join:", " }}</p>
+                                <p><strong>Missing:</strong> {{ match.missing|join:", " }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Recommended Role</h5>
+            </div>
+            <div class="card-body">
+                <h4 class="text-primary">{{ recommended.role }}</h4>
+                <p>Match: {{ recommended.percentage|floatformat:1 }}%</p>
+                {% if recommended.missing %}
+                <p><strong>Skills to develop:</strong> {{ recommended.missing|join:", " }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if interview_questions %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Interview Preparation Questions</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    {% for question in interview_questions %}
+                    <li>{{ question }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if learning_recs %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Learning Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    {% for skill, rec in learning_recs.items %}
+                    <li><strong>{{ skill }}:</strong> {{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="text-center">
+            <a href="{% url 'home' %}" class="btn btn-secondary">Analyze Another Resume</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

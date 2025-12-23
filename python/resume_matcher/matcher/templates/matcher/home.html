@@ -1,0 +1,205 @@
+{% extends 'matcher/base.html' %}
+
+{% block title %}Home - AI Resume Skill Matcher{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-4 bg-primary text-white">
+    <div class="container">
+        <h1 class="display-4 fw-bold" style="text-shadow: 4px 4px 8px rgba(0,0,0,0.9), 0 0 25px rgba(0,0,0,0.5), 0 0 30px rgba(0,102,204,0.6); color: #0066cc !important; font-weight: 900 !important;">
+            <i class="bi bi-robot text-warning me-3" style="font-size: 3rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"></i>
+            AI Resume Skill Matcher
+        </h1>
+        <p class="lead fw-bold" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.4), 0 0 25px rgba(0,102,204,0.5); color: #0066cc !important; font-weight: 700 !important;">Know your job readiness in seconds</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Analyze Your Resume</h5>
+                    
+
+                    <form method="post" enctype="multipart/form-data" id="resumeForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Resume</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="resume_type" id="upload" value="upload" checked>
+                                <label class="form-check-label" for="upload">
+                                    Upload PDF
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="resume_type" id="paste" value="paste">
+                                <label class="form-check-label" for="paste">
+                                    Paste Text
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3" id="uploadSection">
+                            <input type="file" class="form-control" id="resume" name="resume" accept=".pdf">
+                        </div>
+                        <div class="mb-3" id="pasteSection" style="display: none;">
+                            <textarea class="form-control" id="pasted_resume" name="pasted_resume" rows="10" placeholder="Paste your resume text here..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">Analyze Resume</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if show_results %}
+    <div id="results" class="mt-5">
+        <h2 class="mb-4 text-center">Analysis Results for {{ name }}</h2>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Resume Strength Score</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-2">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ resume_strength }}%">{{ resume_strength|floatformat:1 }}%</div>
+                </div>
+                <p>Your resume contains {{ resume_strength|floatformat:1 }}% of the key skills we're looking for.</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Extracted Skills</h5>
+            </div>
+            <div class="card-body">
+                {% for category, skills in extracted_skills.items %}
+                <h6>{{ category }} Skills:</h6>
+                <ul class="list-inline">
+                    {% for skill in skills %}
+                    <li class="list-inline-item badge bg-secondary">{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+                {% empty %}
+                <p>No skills detected. Try uploading a different resume or check the format.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Job Match Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for match in matches %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card {% if match.role == recommended.role %}border-primary border-3{% endif %}">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ match.role }}</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ match.percentage }}%">{{ match.percentage|floatformat:1 }}%</div>
+                                </div>
+                                <p><strong>Matched:</strong> {{ match.matched|join:", " }}</p>
+                                <p><strong>Missing:</strong> {{ match.missing|join:", " }}</p>
+                                <a href="https://internshala.com" target="_blank" class="btn btn-outline-primary btn-sm mt-2">Find Jobs on Internshala</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 border-primary border-3">
+            <div class="card-header bg-primary text-white">
+                <h5>Recommended Job Role</h5>
+            </div>
+            <div class="card-body">
+                <h4 class="text-primary">{{ recommended.role }}</h4>
+                <p>Match: {{ recommended.percentage|floatformat:1 }}%</p>
+                {% if recommended.missing %}
+                <p><strong>Skills to develop:</strong> {{ recommended.missing|join:", " }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if interview_questions %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Interview Preparation Questions for {{ recommended.role }}</h5>
+            </div>
+            <div class="card-body">
+                <ol>
+                    {% for question in interview_questions %}
+                    <li>{{ question }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if learning_recs %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Learning Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    {% for skill, rec in learning_recs.items %}
+                    <li><strong>{{ skill }}:</strong> {{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadRadio = document.getElementById('upload');
+    const pasteRadio = document.getElementById('paste');
+    const uploadSection = document.getElementById('uploadSection');
+    const pasteSection = document.getElementById('pasteSection');
+    const resumeInput = document.getElementById('resume');
+    const pastedTextarea = document.getElementById('pasted_resume');
+
+    function toggleResumeInput() {
+        if (uploadRadio.checked) {
+            uploadSection.style.display = 'block';
+            pasteSection.style.display = 'none';
+            resumeInput.required = true;
+            pastedTextarea.required = false;
+        } else {
+            uploadSection.style.display = 'none';
+            pasteSection.style.display = 'block';
+            resumeInput.required = false;
+            pastedTextarea.required = true;
+        }
+    }
+
+    uploadRadio.addEventListener('change', toggleResumeInput);
+    pasteRadio.addEventListener('change', toggleResumeInput);
+
+    // Scroll to results if present
+    if (document.getElementById('results')) {
+        document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    }
+});
+</script>
+{% endblock %}

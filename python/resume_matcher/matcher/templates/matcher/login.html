@@ -1,0 +1,73 @@
+{% extends 'matcher/base.html' %}
+
+{% block title %}Login - AI Resume Skill Matcher{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center">Login</h2>
+
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {% if message.tags == 'success' %}
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        {% elif message.tags == 'error' %}
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="loginForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="username" name="username" required placeholder="Enter your email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'password_reset' %}" class="btn btn-link">Forgot Password?</a>
+                    </div>
+                    <div class="text-center mt-3">
+                        <p>Don't have an account? <a href="{% url 'signup' %}">Sign Up</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent form submission
+        
+        // Show success message immediately when login button is clicked
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'alert alert-success alert-dismissible fade show';
+        messageDiv.innerHTML = `
+            <i class="bi bi-check-circle-fill text-success me-2"></i>
+            Successfully logged in!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert the message at the top of the card body
+        const cardBody = document.querySelector('.card-body');
+        cardBody.insertBefore(messageDiv, cardBody.firstChild);
+        
+        // Redirect to home page after 2 seconds
+        setTimeout(function() {
+            window.location.href = '/';
+        }, 2000);
+    });
+</script>
+{% endblock %}

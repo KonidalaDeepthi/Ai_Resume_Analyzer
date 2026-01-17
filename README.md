@@ -2,6 +2,7 @@
 
 An AI-powered web application that analyzes resumes and matches them with suitable job roles based on skills.  
 Built as a hackathon project using Django.
+it helps for future students 
 
 ---
 
